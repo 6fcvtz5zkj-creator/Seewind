@@ -1029,6 +1029,10 @@ const MODELLE = [
   ["gfs_seamless",      "GFS","NOAA · 13 km"]
 ];
 const KN = 1.94384; // m/s -> kn
+const PLAUSIBEL_V = 70;  // kn, realistischer Deckel für ein 10-Minuten-Mittel
+const PLAUSIBEL_B = 95;  // kn, realistischer Deckel für eine Böe (allgemein)
+const BOE_DECKEL = 30;   // kn, GeoSphere-Böen darüber gelten als Ausreißer
+const BOE_FAKTOR = 3;    // GeoSphere-Böen über dem 3-fachen der Kiteriders-Böe gelten als Ausreißer
 
 let cfg = {...STD};
 let daten = null;     // Hauptvorhersage
@@ -1692,8 +1696,15 @@ async function geosphereLaden(){
     const dv=(fh.properties.parameters[pV]||{}).data||[];
     const db=(fh.properties.parameters[pB]||{}).data||[];
     const dd=(fh.properties.parameters[pD]||{}).data||[];
-    Q.reihe=ts.map((t,i)=>({zeit:new Date(t), v:dv[i]!=null?dv[i]*fk2:null,
+    const roh=ts.map((t,i)=>({zeit:new Date(t), v:dv[i]!=null?dv[i]*fk2:null,
       b:db[i]!=null?db[i]*fk2:null, dir:dd[i]!=null?dd[i]:null})).filter(m=>m.v!=null);
+    Q.reihe=roh.filter(m=>m.v>=0 && m.v<=PLAUSIBEL_V && (m.b==null || (m.b>=0 && m.b<=PLAUSIBEL_B)));
+    Q.verworfen=roh.length-Q.reihe.length;
+  }
+  // Auch der Einzelwert "jetzt" bekommt denselben Realitätscheck
+  if(Q.jetzt){
+    if(Q.jetzt.v!=null && (Q.jetzt.v<0||Q.jetzt.v>PLAUSIBEL_V)) Q.jetzt.v=null;
+    if(Q.jetzt.b!=null && (Q.jetzt.b<0||Q.jetzt.b>PLAUSIBEL_B)) Q.jetzt.b=null;
   }
 }
 
@@ -1703,11 +1714,37 @@ async function kiteridersLaden(){
   Q.dist=Math.hypot((KITE.lat-cfg.lat)*111,(KITE.lon-cfg.lon)*75);
   const {text, via}=await holeText(KITE.url);
   Q.via=via;
-  const reihe=kiteridersParsen(text);
-  if(!reihe.length) throw new Error("Tabelle nicht lesbar");
-  Q.reihe=reihe;
-  const letzte=reihe[reihe.length-1];
+  const roh=kiteridersParsen(text);
+  if(!roh.length) throw new Error("Tabelle nicht lesbar");
+  Q.reihe=roh.filter(m=>m.v>=0 && m.v<=PLAUSIBEL_V && (m.b==null || (m.b>=0 && m.b<=PLAUSIBEL_B)));
+  Q.verworfen=roh.length-Q.reihe.length;
+  const letzte = Q.reihe.length ? Q.reihe[Q.reihe.length-1] : roh[roh.length-1];
   Q.jetzt={v:letzte.v, b:letzte.b, dir:letzte.dir, zeit:letzte.zeit};
+}
+
+/* Böen-Realitätscheck: GeoSphere (tawes-v1-10min, nicht qualitätsgeprüft) liefert
+   gelegentlich Böen weit über jedem plausiblen Wert. Kiteriders misst dieselbe
+   Wetterlage nur wenige km entfernt und dient als Referenz: Böen weit darüber, oder
+   über einem absoluten Deckel, werden verworfen — der Mittelwind bleibt stehen. */
+function boeAbgleichen(){
+  const geo=MESS.geo, kite=MESS.kite;
+  let verworfen=0;
+  const filtern=(b, zeitMs)=>{
+    if(b==null) return b;
+    if(b>BOE_DECKEL){ verworfen++; return null; }
+    if(kite.reihe.length){
+      const ref=wertBei(kite.reihe, zeitMs, 20*60*1000);
+      if(ref && ref.b!=null && b>ref.b*BOE_FAKTOR){ verworfen++; return null; }
+    }
+    return b;
+  };
+  if(geo.reihe.length){
+    geo.reihe = geo.reihe.map(m=>({...m, b:filtern(m.b, m.zeit.getTime())}));
+  }
+  if(geo.jetzt && geo.jetzt.b!=null){
+    geo.jetzt.b = filtern(geo.jetzt.b, (geo.jetzt.zeit||new Date()).getTime());
+  }
+  geo.boeVerworfen = verworfen;
 }
 
 async function messwerteLaden(){
@@ -1715,6 +1752,7 @@ async function messwerteLaden(){
   const erg=await Promise.allSettled([geosphereLaden(), kiteridersLaden()]);
   if(erg[0].status==="rejected") MESS.geo.fehler = erg[0].reason.message||"nicht erreichbar";
   if(erg[1].status==="rejected") MESS.kite.fehler= erg[1].reason.message||"nicht erreichbar";
+  boeAbgleichen();
 
   // Vorhersage an den jeweiligen Stationsorten holen
   const mit=quellenListe().filter(q=>q.jetzt&&q.lat!=null);
@@ -1756,6 +1794,8 @@ function quellenZeichnen(){
       <div class="qwert" style="color:${QFARBE[q.id]}">${rd(j.v)} kn <span style="font-size:14px;color:var(--nebel)">${bft(j.v)} Bft</span></div>
       <div class="qdetail">Böen ${rd(j.b)} kn · ${j.dir!=null?himmel(j.dir)+" "+rd(j.dir)+"°":"–"}</div>
       <div class="qdetail">${q.name||""}${q.dist!=null?" · "+de(q.dist)+" km":""}${j.zeit?" · "+j.zeit.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):""}${q.via&&q.via!=="direkt"?" · über "+q.via:""}</div>
+      ${q.verworfen?`<div class="qdetail" style="color:var(--nebel-2)">${q.verworfen} unplausible Messwerte verworfen (Rohdaten, nicht qualitätsgeprüft)</div>`:""}
+      ${q.boeVerworfen?`<div class="qdetail" style="color:var(--nebel-2)">${q.boeVerworfen} Böenwerte verworfen (über ${BOE_DECKEL} kn oder ${BOE_FAKTOR}× Kiteriders)</div>`:""}
       <div class="qdiff">${df}</div></div>`;
   }).join("");
 }
