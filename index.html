@@ -803,6 +803,47 @@ td .aufl,th .aufl{display:block;font-family:var(--cond);font-size:11.5px;letter-
 .mess{font-family:var(--mono);font-size:14.5px}
 .mess .gross{font-size:24px;color:var(--gruen)}
 .hint{color:var(--nebel);font-size:14px}
+[hidden]{display:none!important}
+.messtrend,.abweichung{width:100%;display:block;margin-top:16px}
+.quellen{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1px;background:var(--linie);
+  border:1px solid var(--linie);border-radius:8px;overflow:hidden}
+.quelle{background:var(--karte);padding:13px 14px;border-top:3px solid var(--nebel-2)}
+.qname{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.qwert{font-family:var(--mono);font-size:26px;line-height:1.1;letter-spacing:-.02em}
+.qdetail{font-family:var(--mono);font-size:12.5px;color:var(--nebel);margin-top:4px}
+.qdiff{font-family:var(--mono);font-size:14px;margin-top:9px;padding-top:9px;border-top:1px solid var(--linie)}
+.qdiff b{font-weight:600}
+.qfehler{font-size:13px;color:var(--nebel);line-height:1.5}
+.deltas{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--linie);
+  border:1px solid var(--linie);border-radius:8px;overflow:hidden;margin-top:15px}
+.delta{background:var(--karte);padding:12px 6px;text-align:center}
+.delta .dlabel{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.06em;white-space:nowrap;
+  text-transform:uppercase;color:var(--nebel-2);margin-bottom:5px}
+.delta .dwert{font-family:var(--mono);font-size:19px;letter-spacing:-.03em;white-space:nowrap}
+.delta .dsub{font-family:var(--mono);font-size:11.5px;color:var(--nebel-2);margin-top:3px}
+.wpegel{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.wpegel .gross{font-family:var(--mono);font-size:34px;letter-spacing:-.03em;color:var(--wasser)}
+.probe{font-family:var(--mono);font-size:11.5px;color:var(--nebel-2);background:var(--tiefe);
+  border:1px solid var(--linie);border-radius:6px;padding:9px 11px;margin-top:10px;
+  white-space:pre-wrap;word-break:break-all;max-height:110px;overflow:auto}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.chip{font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--karte);border:1px solid var(--linie);color:var(--nebel);padding:6px 13px;border-radius:99px;cursor:pointer}
+.chip[aria-pressed="true"]{background:rgba(56,217,160,.16);border-color:var(--gruen);color:var(--gruen)}
+.chip:disabled{opacity:.35;cursor:not-allowed}
+.schalterzeile{display:flex;align-items:center;gap:13px;border-top:1px solid var(--linie);margin-top:15px;padding-top:15px}
+.schalter{position:relative;display:inline-block;width:46px;height:27px;flex:0 0 auto}
+.schalter input{position:absolute;opacity:0;width:1px;height:1px}
+.schalter-schiene{position:absolute;inset:0;background:var(--linie);border-radius:99px;transition:background .15s;cursor:pointer}
+.schalter-schiene::before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:var(--segel);border-radius:50%;transition:transform .15s}
+.schalter input:checked + .schalter-schiene{background:var(--gruen)}
+.schalter input:checked + .schalter-schiene::before{transform:translateX(19px)}
+.schalter input:disabled + .schalter-schiene{opacity:.4;cursor:not-allowed}
+.schalter input:focus-visible + .schalter-schiene{outline:2px solid var(--wasser);outline-offset:2px}
+.schaltertext{font-size:13.5px;color:var(--nebel);line-height:1.5}
+.schaltertext b{color:var(--segel);font-weight:600;display:block;font-size:14.5px;margin-bottom:2px}
+.korrblase{display:inline-block;font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gruen);border:1px solid var(--gruen);border-radius:99px;padding:2px 9px;margin-left:9px;vertical-align:middle}
 a{color:var(--wasser);text-decoration:none;border-bottom:1px solid rgba(63,184,240,.45)}
 a:hover{border-bottom-color:var(--wasser)}
 #karte{height:340px;border-radius:var(--r);overflow:hidden;border:1px solid var(--linie);background:var(--karte-2)}
@@ -868,6 +909,48 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--linie);color:
 </section>
 
 <section>
+  <p class="label">Gemessen statt gerechnet</p>
+  <div class="karte mess" id="messkarte">
+    <div class="quellen" id="quellen"><div class="quelle"><span class="hint">Messstationen werden geladen …</span></div></div>
+    <svg class="messtrend" id="messtrend" viewBox="0 0 760 150" preserveAspectRatio="xMidYMid meet"
+      role="img" aria-label="Trend der letzten 24 Stunden" hidden></svg>
+    <div class="schalterzeile" id="korrekturzeile" hidden>
+      <label class="schalter">
+        <input type="checkbox" id="i-korrektur">
+        <span class="schalter-schiene"></span>
+      </label>
+      <div class="schaltertext">
+        <b>Korrektur in die Vorhersage einrechnen</b>
+        <span id="korrekturinfo"></span>
+      </div>
+    </div>
+    <div class="chips" id="quellwahl"></div>
+  </div>
+</section>
+
+<section>
+  <p class="label">Prognose vs. Messung</p>
+  <div class="karte">
+    <svg class="abweichung" id="abweichung" viewBox="0 0 760 260" preserveAspectRatio="xMidYMid meet"
+      role="img" aria-label="Vorhersage im Vergleich zur Messung" hidden></svg>
+    <p class="streu" id="abweichtext">Sammle Vergleichsdaten der letzten 48 Stunden …</p>
+  </div>
+</section>
+
+<section>
+  <p class="label">Wasserstand Neusiedler See</p>
+  <div class="karte">
+    <div id="wasserjetzt"><span class="hint">Wasserstand wird geladen …</span></div>
+    <div class="deltas" id="wasserdeltas" hidden></div>
+    <svg class="messtrend" id="wassertrend" viewBox="0 0 760 170" preserveAspectRatio="xMidYMid meet"
+      role="img" aria-label="Wasserstandstrend" hidden></svg>
+    <svg class="messtrend" id="wasserjahre" viewBox="0 0 760 250" preserveAspectRatio="xMidYMid meet"
+      role="img" aria-label="Jahresvergleich Wasserstand" hidden></svg>
+    <p class="streu" id="wasserjahretext"></p>
+  </div>
+</section>
+
+<section>
   <p class="label">Karte</p>
   <div class="karte" style="padding:0">
     <div id="karte"></div>
@@ -888,11 +971,6 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--linie);color:
   </div>
 </section>
 
-<section>
-  <p class="label">Gemessen statt gerechnet</p>
-  <div class="karte mess" id="messung"><span class="hint">Messstation wird gesucht …</span></div>
-</section>
-
 <details id="einst">
   <summary>Einstellungen</summary>
   <div class="form">
@@ -904,6 +982,10 @@ footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--linie);color:
     <div><label for="i-max">Ab kn bleibt es am Strand</label><input id="i-max" type="number" step="0.5" inputmode="decimal"></div>
     <div><label for="i-boe">Böen-Limit kn</label><input id="i-boe" type="number" step="0.5" inputmode="decimal"></div>
     <div><label for="i-name">Spotname</label><input id="i-name" type="text"></div>
+    <div style="grid-column:1/-1"><label for="i-prox">Eigener CORS-Proxy für Kiteriders (optional)</label><input id="i-prox" type="text" placeholder="https://dein-worker.workers.dev/?url={url}"></div>
+    <div style="grid-column:1/-1"><label for="i-wurl">Wasserstand — Livedatei</label><input id="i-wurl" type="text"></div>
+    <div style="grid-column:1/-1"><label for="i-wtoken">Wasserstand — Export-Token (für Jahresvergleich)</label><input id="i-wtoken" type="text"></div>
+    <div style="grid-column:1/-1"><label for="i-whist">Wasserstand — eigene Verlaufsdatei (Tageswerte)</label><input id="i-whist" type="text" placeholder="wasserstand-historie.csv"></div>
   </div>
   <p class="hint" style="margin-top:14px">Die Werte stehen in der Adresszeile hinter dem <code>#</code> — Seite als Lesezeichen oder auf den Homescreen legen, dann bleiben sie erhalten.</p>
 </details>
@@ -932,7 +1014,11 @@ const STD = {
   min:4,                      // darunter: Flaute
   klein:14,                   // ab hier kleines Segel (5,2 m²)
   max:22,                     // ab hier bleibt das Boot am Strand
-  boe:28                      // Böen-Limit
+  boe:28,                     // Böen-Limit
+  prox:"https://seewind-proxy.gpbn77jtkn.workers.dev/?url={url}", // eigener CORS-Proxy, Platzhalter {url}
+  wurl:"https://wasser.bgld.gv.at/fileadmin/hydrography/Daten/Seestationen/Mittlerer_Wasserstand_Neusiedler_See.txt",
+  wtoken:"hjpRalsA7imnA-XjIsk6qQ", // Export-Token der Livegrafik, aus dem Download-Link abgelesen
+  whist:"wasserstand-historie.csv" // Rueckfall, falls der Token nicht mehr funktioniert
 };
 const MODELLE = [
   ["geosphere_seamless","AROME","GeoSphere Austria · 2,5 km"],
@@ -948,12 +1034,39 @@ let cfg = {...STD};
 let daten = null;     // Hauptvorhersage
 let spread = null;    // Modellvergleich
 let tag = 0;          // gewählter Tag
+let tagGesetzt = false;
+let MESSSTATION = null;      // gefundene GeoSphere-Station (gecacht)
+let korrekturAktiv = false;  // Schalter: Korrekturwert in die Vorhersage einrechnen
+let korrekturWert = null;    // gemittelte Abweichung Messung - Modell, in kn
+let korrekturQuelle = "beide";
+
+const KITE = { kurz:"Kiteriders", name:"Kiteriders Podersdorf",
+  url:"https://www.kiteriders.at/wind/weatherstat_kn.html", lat:47.8655, lon:16.8385 };
+const HIMMELSGRAD = {N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,
+  S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5};
+const QFARBE = {geo:"var(--gruen)", kite:"var(--schilf)"};
+let MESS = {
+  geo :{id:"geo", kurz:"GeoSphere", name:null, dist:null, jetzt:null, reihe:[], stdReihe:null, diff:null, fehler:null},
+  kite:{id:"kite", kurz:KITE.kurz, name:KITE.name, dist:null, jetzt:null, reihe:[], stdReihe:null, diff:null, fehler:null}
+};
 
 /* ============ Hilfen ============ */
 const $ = s => document.querySelector(s);
 const rd = (x,n=0) => x==null||isNaN(x) ? "–" : x.toFixed(n);
 const de = (x,n=1) => x==null||isNaN(x) ? "–" : x.toFixed(n).replace(".",",");
 const winkel = (a,b) => { let d=Math.abs(a-b)%360; return d>180?360-d:d; };
+const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+const escHtml = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function heuteSchluessel(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function heuteIndex(){
+  if(!daten) return 0;
+  const idx=daten.daily.time.indexOf(heuteSchluessel());
+  return idx<0?0:idx;
+}
+function istHeute(t){ return daten && daten.daily.time[t]===heuteSchluessel(); }
 
 function bft(kn){
   const g=[1,4,7,11,17,22,28,34,41,48,56,64];
@@ -1000,7 +1113,7 @@ function hashLesen(){
   for(const k of Object.keys(STD)){
     if(!p.has(k)) continue;
     const v=p.get(k);
-    cfg[k]= k==="name" ? v : parseFloat(v);
+    cfg[k]= (k==="name"||k==="prox"||k==="wurl"||k==="whist"||k==="wtoken") ? v : parseFloat(v);
   }
   if(isNaN(cfg.lat)||isNaN(cfg.lon)){cfg.lat=STD.lat;cfg.lon=STD.lon;}
 }
@@ -1013,7 +1126,7 @@ function hashSchreiben(){
 function formFuellen(){
   $("#i-lat").value=cfg.lat; $("#i-lon").value=cfg.lon; $("#i-ow").value=cfg.ow;
   $("#i-min").value=cfg.min; $("#i-klein").value=cfg.klein; $("#i-max").value=cfg.max;
-  $("#i-boe").value=cfg.boe; $("#i-name").value=cfg.name;
+  $("#i-boe").value=cfg.boe; $("#i-name").value=cfg.name; $("#i-prox").value=cfg.prox||""; $("#i-wurl").value=cfg.wurl||""; $("#i-wtoken").value=cfg.wtoken||""; $("#i-whist").value=cfg.whist||"";
   $("#ortname").innerHTML=cfg.name+' <span>· Seewind</span>';
   document.title="Seewind – "+cfg.name;
 }
@@ -1033,7 +1146,7 @@ async function laden(){
   const a=fetch(url({
     current:"wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m",
     hourly:"wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,precipitation_probability,precipitation,weather_code,cloud_cover",
-    daily:"sunrise,sunset"
+    daily:"sunrise,sunset", past_days:"2"
   })).then(r=>r.ok?r.json():Promise.reject(new Error("HTTP "+r.status)));
 
   const b=fetch(url({
@@ -1043,6 +1156,7 @@ async function laden(){
 
   try{
     daten=await a; spread=await b;
+    if(!tagGesetzt || tag<heuteIndex()){ tag=heuteIndex(); tagGesetzt=true; }
     zeichnen();
     $("#stand").textContent="Stand "+new Date().toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
   }catch(e){
@@ -1050,23 +1164,33 @@ async function laden(){
       ').<br>Wenn diese Seite in einer Vorschau läuft: Datei herunterladen und direkt im Browser öffnen — dann klappt der Abruf.</p>';
     $("#stand").textContent="offline";
   }
-  messwerte();
+  await messwerteLaden();
+  if(daten) zeichnen();
+  wasserLaden();
 }
 
 /* Stunden eines Tages als Array von Objekten */
 function stunden(t){
-  const h=daten.hourly, aus=[];
+  const h=daten.hourly, aus=[], tagesdatum=new Date(daten.daily.sunrise[t]);
+  const korrigierbar = korrekturAktiv && korrekturWert!=null && istHeute(t);
+  const jetztZeit=new Date();
   for(let i=0;i<h.time.length;i++){
     const d=new Date(h.time[i]);
-    if(d.getDate()!==new Date(daten.daily.sunrise[t]).getDate()) continue;
-    aus.push({
+    if(!sameDay(d,tagesdatum)) continue;
+    const obj={
       i, zeit:d, std:d.getHours(),
       v:h.wind_speed_10m[i], b:h.wind_gusts_10m[i], dir:h.wind_direction_10m[i],
       temp:h.temperature_2m[i],
       regen:h.precipitation_probability?h.precipitation_probability[i]:null,
       mm:h.precipitation?h.precipitation[i]:null,
       code:h.weather_code?h.weather_code[i]:null
-    });
+    };
+    if(korrigierbar && d>=jetztZeit){
+      obj.v=Math.max(0,obj.v+korrekturWert);
+      if(obj.b!=null) obj.b=Math.max(0,obj.b+korrekturWert);
+      obj.korrigiert=true;
+    }
+    aus.push(obj);
   }
   return aus;
 }
@@ -1153,12 +1277,18 @@ function pfeilSVG(dir,r){ // Pfeil zeigt, wohin der Wind weht
 }
 
 function jetzt(){
-  const c=daten.current, u=urteil(c.wind_speed_10m,c.wind_gusts_10m), uf=ufer(c.wind_direction_10m);
+  const c0=daten.current;
+  const korrigiert = korrekturAktiv && korrekturWert!=null;
+  const c = korrigiert ? {...c0,
+    wind_speed_10m:Math.max(0,c0.wind_speed_10m+korrekturWert),
+    wind_gusts_10m:c0.wind_gusts_10m!=null?Math.max(0,c0.wind_gusts_10m+korrekturWert):c0.wind_gusts_10m
+  } : c0;
+  const u=urteil(c.wind_speed_10m,c.wind_gusts_10m), uf=ufer(c.wind_direction_10m);
   const b6 = c.wind_gusts_10m>=22, b8 = c.wind_gusts_10m>=34;
   const klasse = b8?"beacon sturm":b6?"beacon vor":"";
   $("#jetzt").innerHTML=`
     <div>
-      <div class="zahl" style="color:${u.farbe}">${rd(c.wind_speed_10m)}<small>kn</small></div>
+      <div class="zahl" style="color:${u.farbe}">${rd(c.wind_speed_10m)}<small>kn</small>${korrigiert?'<span class="korrblase">korrigiert</span>':''}</div>
       <div class="bft" style="color:${u.farbe};border-color:${u.farbe}">${bft(c.wind_speed_10m)} Beaufort</div>
       <div class="boe">Böen <b>${rd(c.wind_gusts_10m)} kn</b> · ${bft(c.wind_gusts_10m)} Bft · ${rd(c.temperature_2m)} °C</div>
     </div>
@@ -1218,9 +1348,11 @@ function regenBlock(){
 
 function tabsBauen(){
   const t=$("#tabs"); t.innerHTML="";
+  const start=heuteIndex();
   daten.daily.sunrise.forEach((s,i)=>{
+    if(i<start) return; // vergangene Tage sind kein Tab, nur die Vergleichsgrafik zeigt sie
     const d=new Date(s);
-    const name = i===0?"Heute" : i===1?"Morgen" :
+    const name = i===start?"Heute" : i===start+1?"Morgen" :
       d.toLocaleDateString("de-AT",{weekday:"short"})+" "+d.getDate()+"."+(d.getMonth()+1)+".";
     const b=document.createElement("button");
     b.className="tab"; b.type="button"; b.role="tab"; b.textContent=name;
@@ -1323,7 +1455,8 @@ function band(){
     <span><i style="background:var(--schilf)"></i>Grenzbereich</span>
     <span><i style="background:var(--sturm)"></i>zu viel Wind oder Gewitter</span>
     <span><i style="background:var(--gruen);opacity:.33"></i>heller Aufsatz = Böen</span>
-    <span style="width:100%">Linke Achse Knoten, rechte Achse Beaufort · Senkrechter Strich = Spanne der Wettermodelle · Pfeil zeigt, wohin der Wind weht, orange = ablandig</span>`;
+    <span style="width:100%">Linke Achse Knoten, rechte Achse Beaufort · Senkrechter Strich = Spanne der Wettermodelle · Pfeil zeigt, wohin der Wind weht, orange = ablandig</span>
+    ${korrekturAktiv && korrekturWert!=null && istHeute(tag) ? `<span style="width:100%;color:var(--gruen)">Werte ab jetzt sind für den Rest von heute um ${korrekturWert>0?"+":""}${de(korrekturWert)} kn korrigiert.</span>` : ""}`;
 }
 
 function fenster(){
@@ -1409,45 +1542,622 @@ function modelle(){
   }
 }
 
-/* ============ Live-Messwerte GeoSphere ============ */
-async function messwerte(){
-  const el=$("#messung");
-  const RES="https://dataset.api.hub.geosphere.at/v1/station/current/tawes-v1-10min";
-  try{
-    const meta=await fetch(RES+"/metadata").then(r=>r.ok?r.json():Promise.reject(new Error("meta")));
-    const koord=s=>[Number(s.lat??s.latitude), Number(s.lon??s.longitude)];
-    const stationen=(meta.stations||[]).filter(s=>koord(s).every(Number.isFinite));
-    if(!stationen.length) throw new Error("keine Stationen");
-    const nah=stationen.map(s=>{const[la,lo]=koord(s);
-      return {...s,d:Math.hypot((la-cfg.lat)*111,(lo-cfg.lon)*75)};})
-      .sort((a,b)=>a.d-b.d)[0];
-    const ps=meta.parameters||[];
-    const find=re=>{const p=ps.find(p=>re.test(((p.long_name||"")+" "+(p.name||""))));return p?p.name:null;};
-    const pV=find(/Windgeschwindigkeit(?!.*(Spitze|max))/i)||"FF";
-    const pB=find(/(Windspitze|Böe|maximale Windgeschwindigkeit)/i)||"FFX";
-    const pD=find(/Windrichtung(?!.*Spitze)/i)||"DD";
+/* ============ Messstationen ============ */
+function quellenListe(){ return [MESS.geo, MESS.kite]; }
+function aktiveQuellen(){
+  const l = korrekturQuelle==="geo" ? [MESS.geo] : korrekturQuelle==="kite" ? [MESS.kite] : quellenListe();
+  return l.filter(q=>q.diff!=null);
+}
+function korrekturBerechnen(){
+  const d=aktiveQuellen().map(q=>q.diff);
+  korrekturWert = d.length ? d.reduce((x,y)=>x+y,0)/d.length : null;
+}
 
-    const q=`${RES}?parameters=${[pV,pB,pD].join(",")}&station_ids=${nah.id}`;
-    const j=await fetch(q).then(r=>r.ok?r.json():Promise.reject(new Error("HTTP "+r.status)));
-    const f=(j.features||[])[0]; if(!f) throw new Error("keine Daten");
-    const g=n=>{const p=f.properties.parameters[n];return p&&p.data?p.data[p.data.length-1]:null;};
-    const einheit=n=>(f.properties.parameters[n]||{}).unit||"";
-    let v=g(pV), b=g(pB), d=g(pD);
-    const faktor = /m\/s/i.test(einheit(pV)) ? KN : (/km\/h/i.test(einheit(pV)) ? 0.53996 : 1);
-    if(v!=null) v*=faktor; if(b!=null) b*=faktor;
-    const zeit=(j.timestamps||[]).slice(-1)[0];
-    const abw = (daten&&v!=null) ? v-daten.current.wind_speed_10m : null;
-
-    el.innerHTML=`
-      <div><span class="gross">${rd(v)} kn</span> <span style="color:var(--nebel)">${bft(v)} Bft · Böen ${rd(b)} kn · ${d!=null?himmel(d)+" "+rd(d)+"°":"–"}</span></div>
-      <p class="hint" style="margin:8px 0 0">Station ${nah.name} (${de(nah.d)} km entfernt), ${zeit?new Date(zeit).toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):"–"} Uhr.
-      ${abw!=null?`Das Modell liegt gerade <b style="color:var(--segel)">${abw>0?"":"+"}${de(Math.abs(abw))} kn ${abw>0?"unter":"über"}</b> der Messung — ein guter Korrekturwert für die nächsten Stunden.`:""}</p>`;
-  }catch(e){
-    el.innerHTML=`<p class="hint" style="margin:0">Keine amtliche Station abrufbar (${e.message}). Direkt am See messen:
-      <a href="https://scpn.at/wetterstation/" target="_blank" rel="noopener">Segelclub Podersdorf</a> ·
-      <a href="https://shop.kitesurfing.at/de/wind" target="_blank" rel="noopener">Podersdorf Nord</a> ·
-      <a href="https://www.lsz-b.at/leistungen/webcams/" target="_blank" rel="noopener">Webcam Weiden</a></p>`;
+/* Text holen, bei CORS-Blockade über einen Proxy */
+const WEGE = [
+  {n:"direkt",     b:u=>u},
+  {n:"codetabs",   b:u=>"https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u)},
+  {n:"allorigins", b:u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u)},
+  {n:"thingproxy", b:u=>"https://thingproxy.freeboard.io/fetch/"+u},
+  {n:"jina",       b:u=>"https://r.jina.ai/"+u},
+  {n:"corsproxy",  b:u=>"https://corsproxy.io/?url="+encodeURIComponent(u)}
+];
+async function holeText(url, pruef){
+  const kette = cfg.prox
+    ? [{n:"eigener Proxy", b:u=>cfg.prox.includes("{url}") ? cfg.prox.replace("{url}",encodeURIComponent(u)) : cfg.prox+encodeURIComponent(u)}, ...WEGE]
+    : WEGE;
+  const notizen=[];
+  let probe=null;   // Anfang der zuletzt tatsächlich erhaltenen Antwort, fürs Debugging
+  for(const w of kette){
+    const ac=new AbortController();
+    const uhr=setTimeout(()=>ac.abort(), 12000);
+    try{
+      const r=await fetch(w.b(url),{signal:ac.signal});
+      clearTimeout(uhr);
+      if(!r.ok){ notizen.push(`${w.n}: HTTP ${r.status}`); continue; }
+      const txt=await r.text();
+      if(txt && !probe) probe={via:w.n, text:txt};
+      const gut = pruef ? pruef(txt) : /[\d.]+\s*kn/i.test(txt);
+      if(txt && gut) return {text:txt, via:w.n};
+      notizen.push(`${w.n}: Inhalt unbrauchbar`);
+    }catch(e){
+      clearTimeout(uhr);
+      notizen.push(`${w.n}: ${e.name==="AbortError"?"Zeitüberschreitung":"blockiert"}`);
+    }
   }
+  const f=new Error(notizen.join(" · ")); f.kette=notizen; f.probe=probe; throw f;
+}
+
+/* WeeWX-Tabelle von kiteriders.at parsen (Minutenwerte, bereits in Knoten) */
+function kiteridersParsen(html){
+  const doc=new DOMParser().parseFromString(html,"text/html");
+  const aus=[], grenze=Date.now()-50*3600*1000;
+  doc.querySelectorAll("tr").forEach(tr=>{
+    const z=[...tr.querySelectorAll("td")].map(td=>td.textContent.replace(/\s+/g," ").trim());
+    if(z.length<5) return;
+    const datum=z.find(t=>/^\d{2}\/\d{2}\/\d{4}$/.test(t));
+    const uhr  =z.find(t=>/^\d{2}:\d{2}$/.test(t));
+    if(!datum||!uhr) return;
+    const kn=z.filter(t=>/^[\d.]+\s*kn$/i.test(t)).map(t=>parseFloat(t));
+    if(!kn.length) return;
+    const dirTxt=z.find(t=>/^[NSEW]{1,3}$/.test(t));
+    const [tt,mm,jj]=datum.split("/").map(Number);
+    const [hh,mi]=uhr.split(":").map(Number);
+    const zeit=new Date(jj,mm-1,tt,hh,mi);
+    if(zeit.getTime()<grenze || zeit.getTime()>Date.now()+3600*1000) return;
+    aus.push({zeit, v:kn[0], b:kn.length>1?kn[1]:null, dir:dirTxt!=null?HIMMELSGRAD[dirTxt]:null});
+  });
+  return aus.length ? aus.sort((x,y)=>x.zeit-y.zeit) : kiteridersTextParsen(html);
+}
+
+/* Rückfall: manche Proxies liefern die Tabelle als Text/Markdown statt als HTML */
+function kiteridersTextParsen(txt){
+  const aus=[], grenze=Date.now()-50*3600*1000, ober=Date.now()+3600*1000;
+  const RI=/\b(NNE|NNW|ENE|ESE|WNW|WSW|SSE|SSW|NE|NW|SE|SW|N|E|S|W)\b/;
+  txt.split(/\r?\n/).forEach(z=>{
+    const d=z.match(/\b(\d{2})\/(\d{2})\/(\d{4})\b/);
+    const u=z.match(/\b(\d{2}):(\d{2})\b/);
+    if(!d||!u) return;
+    const kn=[...z.matchAll(/([\d.]+)\s*kn/gi)].map(m=>parseFloat(m[1]));
+    if(!kn.length) return;
+    const zeit=new Date(+d[3], +d[2]-1, +d[1], +u[1], +u[2]);
+    if(zeit.getTime()<grenze || zeit.getTime()>ober) return;
+    const ri=z.match(RI);
+    aus.push({zeit, v:kn[0], b:kn.length>1?kn[1]:null, dir:ri?HIMMELSGRAD[ri[1]]:null});
+  });
+  return aus.sort((x,y)=>x.zeit-y.zeit);
+}
+
+/* Vorhersage an den Stationsorten — damit die Differenz echter Modellfehler ist
+   und nicht nur der Ortsunterschied zwischen Weiden und Podersdorf */
+async function stationsPrognose(punkte){
+  const p=new URLSearchParams({
+    latitude:punkte.map(x=>x[0]).join(","), longitude:punkte.map(x=>x[1]).join(","),
+    current:"wind_speed_10m,wind_gusts_10m", hourly:"wind_speed_10m",
+    past_days:"2", forecast_days:"1", wind_speed_unit:"kn", timezone:"Europe/Vienna"
+  });
+  const r=await fetch(BASIS+"?"+p.toString());
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const j=await r.json();
+  return (Array.isArray(j)?j:[j]).map(o=>({
+    jetzt: o.current ? o.current.wind_speed_10m : null,
+    stdReihe: o.hourly ? {time:o.hourly.time, wind:o.hourly.wind_speed_10m} : null
+  }));
+}
+
+async function geosphereStation(){
+  if(MESSSTATION) return MESSSTATION;
+  const RES="https://dataset.api.hub.geosphere.at/v1/station/current/tawes-v1-10min";
+  const meta=await fetch(RES+"/metadata").then(r=>r.ok?r.json():Promise.reject(new Error("Metadaten")));
+  const koord=s=>[Number(s.lat??s.latitude), Number(s.lon??s.longitude)];
+  const st=(meta.stations||[]).filter(s=>koord(s).every(Number.isFinite));
+  if(!st.length) throw new Error("keine Stationen");
+  const nah=st.map(s=>{const[la,lo]=koord(s); return {...s,la,lo,d:Math.hypot((la-cfg.lat)*111,(lo-cfg.lon)*75)};})
+              .sort((x,y)=>x.d-y.d)[0];
+  const ps=meta.parameters||[];
+  const find=re=>{const q=ps.find(q=>re.test(((q.long_name||"")+" "+(q.name||""))));return q?q.name:null;};
+  MESSSTATION={station:nah,
+    pV:find(/Windgeschwindigkeit(?!.*(Spitze|max))/i)||"FF",
+    pB:find(/(Windspitze|Böe|maximale Windgeschwindigkeit)/i)||"FFX",
+    pD:find(/Windrichtung(?!.*Spitze)/i)||"DD"};
+  return MESSSTATION;
+}
+
+async function geosphereLaden(){
+  const Q=MESS.geo;
+  const {station:nah,pV,pB,pD}=await geosphereStation();
+  Q.name=nah.name; Q.dist=nah.d; Q.lat=nah.la; Q.lon=nah.lo;
+  const einheitFaktor=e=>/m\/s/i.test(e)?KN:(/km\/h/i.test(e)?0.53996:1);
+
+  const NOW="https://dataset.api.hub.geosphere.at/v1/station/current/tawes-v1-10min";
+  const j=await fetch(`${NOW}?parameters=${[pV,pB,pD].join(",")}&station_ids=${nah.id}`)
+    .then(r=>r.ok?r.json():Promise.reject(new Error("HTTP "+r.status)));
+  const f=(j.features||[])[0]; if(!f) throw new Error("keine Daten");
+  const g=n=>{const q=f.properties.parameters[n];return q&&q.data?q.data[q.data.length-1]:null;};
+  const eh=n=>(f.properties.parameters[n]||{}).unit||"";
+  const fk=einheitFaktor(eh(pV));
+  let v=g(pV), bo=g(pB);
+  Q.jetzt={v:v!=null?v*fk:null, b:bo!=null?bo*fk:null, dir:g(pD),
+           zeit:(j.timestamps||[]).slice(-1)[0]?new Date((j.timestamps||[]).slice(-1)[0]):null};
+
+  const HIST="https://dataset.api.hub.geosphere.at/v1/station/historical/tawes-v1-10min";
+  const iso=d=>d.toISOString().slice(0,16);
+  const jh=await fetch(`${HIST}?parameters=${[pV,pB,pD].join(",")}&station_ids=${nah.id}`+
+    `&start=${iso(new Date(Date.now()-50*3600*1000))}&end=${iso(new Date())}`)
+    .then(r=>r.ok?r.json():Promise.reject(new Error("Verlauf HTTP "+r.status)));
+  const fh=(jh.features||[])[0];
+  if(fh){
+    const ts=jh.timestamps||[];
+    const fk2=einheitFaktor((fh.properties.parameters[pV]||{}).unit||"");
+    const dv=(fh.properties.parameters[pV]||{}).data||[];
+    const db=(fh.properties.parameters[pB]||{}).data||[];
+    const dd=(fh.properties.parameters[pD]||{}).data||[];
+    Q.reihe=ts.map((t,i)=>({zeit:new Date(t), v:dv[i]!=null?dv[i]*fk2:null,
+      b:db[i]!=null?db[i]*fk2:null, dir:dd[i]!=null?dd[i]:null})).filter(m=>m.v!=null);
+  }
+}
+
+async function kiteridersLaden(){
+  const Q=MESS.kite;
+  Q.lat=KITE.lat; Q.lon=KITE.lon;
+  Q.dist=Math.hypot((KITE.lat-cfg.lat)*111,(KITE.lon-cfg.lon)*75);
+  const {text, via}=await holeText(KITE.url);
+  Q.via=via;
+  const reihe=kiteridersParsen(text);
+  if(!reihe.length) throw new Error("Tabelle nicht lesbar");
+  Q.reihe=reihe;
+  const letzte=reihe[reihe.length-1];
+  Q.jetzt={v:letzte.v, b:letzte.b, dir:letzte.dir, zeit:letzte.zeit};
+}
+
+async function messwerteLaden(){
+  for(const Q of quellenListe()){ Q.fehler=null; Q.diff=null; }
+  const erg=await Promise.allSettled([geosphereLaden(), kiteridersLaden()]);
+  if(erg[0].status==="rejected") MESS.geo.fehler = erg[0].reason.message||"nicht erreichbar";
+  if(erg[1].status==="rejected") MESS.kite.fehler= erg[1].reason.message||"nicht erreichbar";
+
+  // Vorhersage an den jeweiligen Stationsorten holen
+  const mit=quellenListe().filter(q=>q.jetzt&&q.lat!=null);
+  if(mit.length){
+    try{
+      const pr=await stationsPrognose(mit.map(q=>[q.lat,q.lon]));
+      mit.forEach((q,i)=>{
+        q.prog=pr[i]?pr[i].jetzt:null;
+        q.stdReihe=pr[i]?pr[i].stdReihe:null;
+        if(q.jetzt.v!=null && q.prog!=null) q.diff=q.jetzt.v-q.prog;
+      });
+    }catch(e){
+      // Rückfall: gegen die Vorhersage am Spot vergleichen
+      mit.forEach(q=>{ if(daten&&q.jetzt.v!=null) q.diff=q.jetzt.v-daten.current.wind_speed_10m; });
+    }
+  }
+  korrekturBerechnen();
+  quellenZeichnen(); quellwahlZeichnen();
+  messTrendZeichnen(); abweichungZeichnen();
+}
+
+function quellenZeichnen(){
+  $("#quellen").innerHTML = quellenListe().map(q=>{
+    if(!q.jetzt){
+      const cors = q.id==="kite";
+      return `<div class="quelle" style="border-top-color:var(--nebel-2)">
+        <div class="qname" style="color:var(--nebel-2)">${q.kurz}</div>
+        <div class="qfehler">Nicht erreichbar.${cors?` Die Station erlaubt keinen Direktabruf aus dem Browser, und alle Ausweichwege haben es auch nicht geschafft.
+          Die Werte selbst gibt es weiterhin <a href="${KITE.url}" target="_blank" rel="noopener">auf der Seite</a>.
+          Dauerhaft lösen lässt sich das mit einem eigenen Proxy, eintragbar unten in den Einstellungen.`:""}
+          ${q.fehler?`<br><span style="color:var(--nebel-2);font-size:12px">${q.fehler}</span>`:""}</div></div>`;
+    }
+    const j=q.jetzt;
+    const d=q.diff;
+    const df = d==null ? `<span style="color:var(--nebel-2)">kein Vergleich</span>`
+      : `Modell <b style="color:${Math.abs(d)<1.5?"var(--nebel)":d>0?"var(--gruen)":"var(--schilf)"}">${d>0?"+":""}${de(d)} kn</b> ${d>0?"zu niedrig":"zu hoch"}`;
+    return `<div class="quelle" style="border-top-color:${QFARBE[q.id]}">
+      <div class="qname" style="color:${QFARBE[q.id]}">${q.kurz}</div>
+      <div class="qwert" style="color:${QFARBE[q.id]}">${rd(j.v)} kn <span style="font-size:14px;color:var(--nebel)">${bft(j.v)} Bft</span></div>
+      <div class="qdetail">Böen ${rd(j.b)} kn · ${j.dir!=null?himmel(j.dir)+" "+rd(j.dir)+"°":"–"}</div>
+      <div class="qdetail">${q.name||""}${q.dist!=null?" · "+de(q.dist)+" km":""}${j.zeit?" · "+j.zeit.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"}):""}${q.via&&q.via!=="direkt"?" · über "+q.via:""}</div>
+      <div class="qdiff">${df}</div></div>`;
+  }).join("");
+}
+
+function quellwahlZeichnen(){
+  const opt=[["beide","beide gemittelt"],["geo",MESS.geo.kurz],["kite",MESS.kite.kurz]];
+  $("#quellwahl").innerHTML = opt.map(([id,txt])=>{
+    const aus = id==="geo" ? MESS.geo.diff==null : id==="kite" ? MESS.kite.diff==null
+              : quellenListe().every(q=>q.diff==null);
+    return `<button class="chip" type="button" data-q="${id}" aria-pressed="${korrekturQuelle===id}" ${aus?"disabled":""}>${txt}</button>`;
+  }).join("");
+  $("#quellwahl").querySelectorAll(".chip").forEach(b=>{
+    b.onclick=()=>{ korrekturQuelle=b.dataset.q; korrekturBerechnen(); quellwahlZeichnen(); korrekturInfoZeichnen();
+      if(daten) zeichnen(); abweichungZeichnen(); };
+  });
+  korrekturInfoZeichnen();
+}
+
+function korrekturInfoZeichnen(){
+  const zeile=$("#korrekturzeile");
+  zeile.hidden = korrekturWert==null;
+  $("#i-korrektur").disabled = korrekturWert==null;
+  if(korrekturWert==null) return;
+  const namen=aktiveQuellen().map(q=>q.kurz).join(" + ");
+  $("#korrekturinfo").innerHTML=`Messung liegt gerade <b style="color:var(--segel)">${korrekturWert>0?"+":""}${de(korrekturWert)} kn</b> `+
+    `${korrekturWert>0?"über":"unter"} der Vorhersage (${namen}). Nur für den Rest von heute wirksam.`;
+}
+
+/* ---------- Trend der letzten 24 Stunden, beide Quellen ---------- */
+function messTrendZeichnen(){
+  const svg=$("#messtrend");
+  const jetzt=Date.now(), start=jetzt-24*3600*1000;
+  const serien=quellenListe().map(q=>({q, R:q.reihe.filter(m=>m.zeit.getTime()>=start)})).filter(x=>x.R.length>1);
+  if(!serien.length){ svg.setAttribute("hidden",""); return; }
+  svg.removeAttribute("hidden");
+  const W=Math.max(320,Math.round(svg.clientWidth||760)), H=170, L=8, Rr=8, gasse=32;
+  const P0=L+gasse, P1=W-Rr, oben=32, achse=H-30;
+  const maxKn=Math.max(10,...serien.flatMap(x=>x.R.map(m=>m.b||m.v)))*1.12;
+  const x=t=>P0+((t-start)/(jetzt-start))*(P1-P0);
+  const y=v=>achse-(v/maxKn)*(achse-oben);
+  let g='';
+  [0.33,0.66].forEach(f=>{
+    const v=Math.round(maxKn*f);
+    g+=`<line x1="${P0}" y1="${y(v)}" x2="${P1}" y2="${y(v)}" stroke="var(--linie)" stroke-dasharray="1 5"/>`;
+    g+=`<text x="${P0-6}" y="${y(v)+4}" text-anchor="end" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${v}</text>`;
+  });
+  serien.forEach(({q,R})=>{
+    let pv='', pb='';
+    R.forEach((m,i)=>{ const px=x(m.zeit.getTime());
+      pv+=(i?"L":"M")+px+","+y(m.v)+" ";
+      if(m.b!=null) pb+=(i?"L":"M")+px+","+y(m.b)+" ";
+    });
+    if(pb) g+=`<path d="${pb}" fill="none" stroke="${QFARBE[q.id]}" stroke-width="1.4" opacity=".3"/>`;
+    g+=`<path d="${pv}" fill="none" stroke="${QFARBE[q.id]}" stroke-width="2.6" stroke-linejoin="round"/>`;
+    const le=R[R.length-1];
+    g+=`<circle cx="${x(le.zeit.getTime())}" cy="${y(le.v)}" r="4.5" fill="${QFARBE[q.id]}"/>`;
+  });
+  for(let hh=0; hh<=24; hh+=6){
+    const t=start+hh*3600*1000; if(t>jetzt+60000) continue;
+    g+=`<text x="${x(t)}" y="${achse+18}" text-anchor="middle" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${String(new Date(t).getHours()).padStart(2,"0")}</text>`;
+  }
+  g+=`<text x="${L}" y="14" font-size="11.5" fill="var(--nebel)" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.2" font-weight="600">TREND 24 H · HELLE LINIE = BÖEN</text>`;
+  serien.forEach(({q},i)=>{
+    g+=`<text x="${L+i*150}" y="28" font-size="11.5" fill="${QFARBE[q.id]}" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.1" font-weight="600">— ${q.kurz.toUpperCase()}</text>`;
+  });
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.style.height=H+"px"; svg.innerHTML=g;
+}
+
+/* ---------- Vorhersage gegen Messung, 48 Stunden ---------- */
+function abweichungReihe(q){
+  const basis = q.stdReihe || (daten?{time:daten.hourly.time, wind:daten.hourly.wind_speed_10m}:null);
+  if(!basis || !q.reihe.length) return [];
+  const jetzt=Date.now(), start=jetzt-48*3600*1000, aus=[];
+  for(let i=0;i<basis.time.length;i++){
+    const t=new Date(basis.time[i]).getTime();
+    if(t<start||t>jetzt) continue;
+    const tr=q.reihe.filter(m=>{const z=m.zeit.getTime(); return z>=t && z<t+3600*1000;});
+    if(!tr.length) continue;
+    const vMess=tr.reduce((x,m)=>x+m.v,0)/tr.length;
+    aus.push({zeit:new Date(t), vFore:basis.wind[i], vMess, diff:vMess-basis.wind[i]});
+  }
+  return aus;
+}
+
+function abweichungZeichnen(){
+  const svg=$("#abweichung"), textEl=$("#abweichtext");
+  const serien=quellenListe().map(q=>({q,R:abweichungReihe(q)})).filter(x=>x.R.length>=3);
+  if(!serien.length){
+    svg.setAttribute("hidden","");
+    textEl.textContent = quellenListe().some(q=>q.reihe.length)
+      ? "Noch nicht genug überlappende Daten für einen Vergleich."
+      : "Keine Messstation verfügbar — kein Vergleich möglich.";
+    return;
+  }
+  svg.removeAttribute("hidden");
+  const W=Math.max(320,Math.round(svg.clientWidth||760)), H=280, L=8, Rr=8, gasse=34;
+  const P0=L+gasse, P1=W-Rr, oben=44, achse=H-46;
+  const jetzt=Date.now(), start=jetzt-48*3600*1000;
+  const maxKn=Math.max(10,...serien.flatMap(x=>x.R.map(r=>Math.max(r.vFore,r.vMess))))*1.1;
+  const x=t=>P0+((t-start)/(jetzt-start))*(P1-P0);
+  const y=v=>achse-(v/maxKn)*(achse-oben);
+  let g='';
+  g+=`<text x="${L}" y="14" font-size="12" fill="var(--nebel)" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.3" font-weight="600">┄ VORHERSAGE</text>`;
+  serien.forEach(({q},i)=>{
+    g+=`<text x="${L+i*150}" y="30" font-size="12" fill="${QFARBE[q.id]}" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.3" font-weight="600">— ${q.kurz.toUpperCase()}</text>`;
+  });
+  [0.33,0.66].forEach(f=>{
+    const v=Math.round(maxKn*f);
+    g+=`<line x1="${P0}" y1="${y(v)}" x2="${P1}" y2="${y(v)}" stroke="var(--linie)" stroke-dasharray="1 5"/>`;
+    g+=`<text x="${P0-6}" y="${y(v)+4}" text-anchor="end" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${v}</text>`;
+  });
+  for(let d=-2; d<=0; d++){
+    const t0=new Date(); t0.setHours(0,0,0,0); t0.setDate(t0.getDate()+d);
+    const tt=t0.getTime(); if(tt<start||tt>jetzt) continue;
+    g+=`<line x1="${x(tt)}" y1="${oben-8}" x2="${x(tt)}" y2="${achse}" stroke="var(--nebel-2)"/>`;
+    g+=`<text x="${x(tt)+4}" y="${oben+2}" font-size="11" fill="var(--nebel-2)" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1">${t0.toLocaleDateString("de-AT",{weekday:"short"}).toUpperCase()}</text>`;
+  }
+  // Vorhersagelinie einmal (aus der ersten Serie)
+  let pf='';
+  serien[0].R.forEach((r,i)=>{ pf+=(i?"L":"M")+x(r.zeit.getTime())+","+y(r.vFore)+" "; });
+  g+=`<path d="${pf}" fill="none" stroke="var(--nebel)" stroke-width="2" stroke-dasharray="3 4"/>`;
+  serien.forEach(({q,R})=>{
+    R.forEach(r=>{
+      if(Math.abs(r.diff)<2) return;
+      g+=`<line x1="${x(r.zeit.getTime())}" y1="${y(r.vFore)}" x2="${x(r.zeit.getTime())}" y2="${y(r.vMess)}" stroke="${QFARBE[q.id]}" stroke-width="2" opacity=".25"/>`;
+    });
+    let pm='';
+    R.forEach((r,i)=>{ pm+=(i?"L":"M")+x(r.zeit.getTime())+","+y(r.vMess)+" "; });
+    g+=`<path d="${pm}" fill="none" stroke="${QFARBE[q.id]}" stroke-width="2.8" stroke-linejoin="round"/>`;
+  });
+  for(let hh=0; hh<=48; hh+=6){
+    const t=start+hh*3600*1000; if(t>jetzt) continue;
+    g+=`<text x="${x(t)}" y="${achse+18}" text-anchor="middle" font-size="11" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${String(new Date(t).getHours()).padStart(2,"0")}</text>`;
+  }
+  g+=`<line x1="${P0}" y1="${achse}" x2="${P1}" y2="${achse}" stroke="var(--linie)"/>`;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.style.height=H+"px"; svg.innerHTML=g;
+
+  textEl.innerHTML = serien.map(({q,R})=>{
+    const mittel=R.reduce((a,r)=>a+Math.abs(r.diff),0)/R.length;
+    const bias=R.reduce((a,r)=>a+r.diff,0)/R.length;
+    return `<b style="color:${QFARBE[q.id]}">${q.kurz}</b>: im Schnitt ${de(mittel)} kn daneben, `+
+           `${bias>0?"Modell zu niedrig":"Modell zu hoch"} (Bias ${bias>0?"+":""}${de(bias)} kn).`;
+  }).join("<br>") +
+  `<br><span style="color:var(--nebel-2);font-size:12.5px">Verglichen wird jede Station mit der Vorhersage für ihren eigenen Standort, damit die Differenz den Modellfehler zeigt und nicht den Ortsunterschied. Die Vorhersagewerte sind rückblickend gerechnet, nicht der Stand von vor zwei Tagen.</span>`;
+}
+
+/* ============ Wasserstand Neusiedler See ============ */
+const PNP = 114.00;                     // Pegelnullpunkt in müA
+let WASSER = { reihe:[], jahre:null, fehler:null, histFehler:null };
+
+/* Tolerant: akzeptiert Datum mit/ohne Uhrzeit, Komma oder Punkt, beliebiges Trennzeichen */
+function wasserParsen(txt){
+  const aus=[];
+  // Format A: dd.mm.yyyy[ T]hh:mm[:ss] <trenner beliebig oder nur Leerzeichen> Wert
+  const reA=/(\d{2})\.(\d{2})\.(\d{4})[ T]+(\d{1,2}):(\d{2})(?::\d{2})?\s*[;,\t|]?\s*(-?\d+(?:[.,]\d+)?)/g;
+  // Format B: ISO-Datum yyyy-mm-dd, gleiche Logik
+  const reB=/(\d{4})-(\d{2})-(\d{2})[ T]+(\d{1,2}):(\d{2})(?::\d{2})?\s*[;,\t|]?\s*(-?\d+(?:[.,]\d+)?)/g;
+  let m;
+  while((m=reA.exec(txt))){
+    const v=parseFloat(m[6].replace(",","."));
+    if(isFinite(v)) aus.push({zeit:new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]), v});
+  }
+  if(!aus.length) while((m=reB.exec(txt))){
+    const v=parseFloat(m[6].replace(",","."));
+    if(isFinite(v)) aus.push({zeit:new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]), v});
+  }
+  // Rückfall: nur Datum ohne Uhrzeit (Tageswerte, etwa für den Jahres-Export)
+  if(!aus.length){
+    const reC=/(\d{2})\.(\d{2})\.(\d{4})\s*[;,\t|]?\s*(-?\d+(?:[.,]\d+)?)/g;
+    while((m=reC.exec(txt))){
+      const v=parseFloat(m[4].replace(",","."));
+      if(isFinite(v)) aus.push({zeit:new Date(+m[3],+m[2]-1,+m[1]), v});
+    }
+  }
+  // Rückfall: ISO-Datum ohne Uhrzeit (yyyy-mm-dd), Trenner Leerzeichen oder Satzzeichen
+  if(!aus.length){
+    const reD=/(\d{4})-(\d{2})-(\d{2})\s*[;,\t|]?\s*(-?\d+(?:[.,]\d+)?)/g;
+    while((m=reD.exec(txt))){
+      const v=parseFloat(m[4].replace(",","."));
+      if(isFinite(v)) aus.push({zeit:new Date(+m[1],+m[2]-1,+m[3]), v});
+    }
+  }
+  if(!aus.length) return aus;
+  // Einheit erkennen: müA (um 115) oder cm über Pegelnullpunkt
+  const sortiert=aus.map(x=>x.v).sort((a,b)=>a-b);
+  const med=sortiert[Math.floor(sortiert.length/2)];
+  if(med>100 && med<130){ /* bereits müA, nichts zu tun */ }
+  else if(med>=20 && med<=400) aus.forEach(x=>{ x.v = PNP + x.v/100; });  // cm über Pegelnull
+  else return [];
+  return aus.sort((a,b)=>a.zeit-b.zeit);
+}
+
+function wertBei(reihe, ziel, toleranzMs){
+  let beste=null, abstand=Infinity;
+  for(const p of reihe){
+    const d=Math.abs(p.zeit.getTime()-ziel);
+    if(d<abstand){ abstand=d; beste=p; }
+  }
+  return (beste && abstand<=toleranzMs) ? beste : null;
+}
+
+async function wasserLaden(){
+  WASSER.fehler=null;
+  WASSER.probe=null;
+  try{
+    const {text}=await holeText(cfg.wurl, t=>wasserParsen(t).length>0);
+    const r=wasserParsen(text);
+    if(!r.length) throw new Error("Datei nicht lesbar");
+    WASSER.reihe=r;
+  }catch(e){ WASSER.fehler=e.message||"nicht erreichbar"; WASSER.probe=e.probe||null; }
+
+  await wasserJahreLaden();
+  wasserZeichnen();
+}
+
+/* Mehrjahresvergleich: automatisch über den Export-Link der Livegrafik holen
+   (Muster https://wasser.bgld.gv.at/export/{Token}/1d/{Jahr}, aus dem Netzwerk-Tab
+   beim Klick auf "Download" abgelesen). Klappt das nicht mehr — der Token kann sich
+   ändern — fällt die App auf eine manuell abgelegte CSV-Datei zurück. */
+async function wasserJahreLaden(){
+  WASSER.histFehler=null; WASSER.jahre=null;
+  const jetztJahr=new Date().getFullYear();
+  const jahre=[jetztJahr, jetztJahr-1, jetztJahr-2];
+
+  if(cfg.wtoken){
+    const teile=await Promise.allSettled(jahre.map(async J=>{
+      const url=`https://wasser.bgld.gv.at/export/${cfg.wtoken}/1d/${J}`;
+      const {text}=await holeText(url, t=>wasserParsen(t).length>3);
+      const r=wasserParsen(text);
+      if(!r.length) throw new Error("Jahr "+J+" nicht lesbar");
+      return r;
+    }));
+    const gut=teile.filter(t=>t.status==="fulfilled").map(t=>t.value);
+    if(gut.length>=2){
+      WASSER.jahre=gut.flat().sort((a,b)=>a.zeit-b.zeit);
+      WASSER.jahreQuelle="automatisch";
+      return;
+    }
+    WASSER.histFehler="Export-Token liefert keine Daten mehr ("+
+      teile.map((t,i)=>t.status==="rejected"?jahre[i]+": "+t.reason.message:null).filter(Boolean).join(" · ")+")";
+    if(!WASSER.probe){
+      const ersterFehler=teile.find(t=>t.status==="rejected");
+      if(ersterFehler && ersterFehler.reason.probe) WASSER.probe=ersterFehler.reason.probe;
+    }
+  }
+
+  if(cfg.whist){
+    try{
+      const r=await fetch(cfg.whist,{cache:"no-cache"});
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      const h=wasserParsen(await r.text());
+      if(!h.length) throw new Error("keine Tageswerte erkannt");
+      WASSER.jahre=h; WASSER.jahreQuelle="Datei";
+    }catch(e){ WASSER.jahre=null; WASSER.histFehler=(WASSER.histFehler?WASSER.histFehler+" · ":"")+"eigene Datei: "+e.message; }
+  }
+}
+
+function wasserZeichnen(){
+  const el=$("#wasserjetzt"), dl=$("#wasserdeltas");
+  if(!WASSER.reihe.length){
+    dl.hidden=true;
+    $("#wassertrend").setAttribute("hidden","");
+    const roh = WASSER.probe ? `<div class="probe">${escHtml(WASSER.probe.text.slice(0,400))}</div>
+      <p class="hint" style="margin-top:6px">Das kam über <b>${WASSER.probe.via}</b> zurück, wurde aber nicht als Datendatei erkannt — vermutlich eine Block- oder Hinweisseite statt der echten Datei.
+      Wenn du mir diesen Ausschnitt schickst, kann ich das Format anpassen.</p>` : "";
+    el.innerHTML=`<p class="hint" style="margin:0">Wasserstand nicht abrufbar${WASSER.fehler?" ("+WASSER.fehler+")":""}.
+      Direkt nachsehen beim <a href="https://wasser.bgld.gv.at/hydrographie/die-seen/mittler-wasserstand-neusiedler-see" target="_blank" rel="noopener">Wasserportal Burgenland</a>.</p>${roh}`;
+    wasserJahreZeichnen();
+    return;
+  }
+  const letzte=WASSER.reihe[WASSER.reihe.length-1];
+  const m=letzte.v-PNP;
+  el.innerHTML=`<div class="wpegel">
+      <span class="gross">${m.toFixed(2).replace(".",",")}<small style="font-size:16px;color:var(--nebel)"> m</small></span>
+      <span style="font-family:var(--mono);font-size:14px;color:var(--nebel)">über Pegelnull (114,00 müA) · ${letzte.v.toFixed(2).replace(".",",")} müA · ${letzte.zeit.toLocaleString("de-AT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</span>
+    </div>`;
+
+  const jetzt=letzte.zeit.getTime(), T=24*3600*1000;
+  const punkte=[["gestern",1,12*3600*1000],["vor 1 Woche",7,24*3600*1000],["vor 1 Monat",30,3*24*3600*1000]];
+  const zellen=punkte.map(([txt,tage,tol])=>{
+    const alt=wertBei(WASSER.reihe, jetzt-tage*T, tol);
+    if(!alt) return `<div class="delta"><div class="dlabel">${txt}</div>
+      <div class="dwert" style="color:var(--nebel-2)">–</div><div class="dsub">keine Daten</div></div>`;
+    const d=(letzte.v-alt.v)*100;
+    const farbe = Math.abs(d)<0.5 ? "var(--nebel)" : d>0 ? "var(--gruen)" : "var(--schilf)";
+    const zeichen = d>0?"+":"";
+    const wert = Math.abs(d)<1 ? `${zeichen}${(d*10).toFixed(0)} mm` : `${zeichen}${de(d)} cm`;
+    return `<div class="delta"><div class="dlabel">${txt}</div>
+      <div class="dwert" style="color:${farbe}">${wert}</div>
+      <div class="dsub">${alt.v.toFixed(2).replace(".",",")} müA</div></div>`;
+  }).join("");
+  dl.hidden=false; dl.innerHTML=zellen;
+
+  wasserTrendZeichnen();
+  wasserJahreZeichnen();
+}
+
+function wasserTrendZeichnen(){
+  const svg=$("#wassertrend"), R=WASSER.reihe;
+  if(R.length<3){ svg.setAttribute("hidden",""); return; }
+  svg.removeAttribute("hidden");
+  const W=Math.max(320,Math.round(svg.clientWidth||760)), H=170, L=8, Rr=8, gasse=52;
+  const P0=L+gasse, P1=W-Rr, oben=28, achse=H-30;
+  const t0=R[0].zeit.getTime(), t1=R[R.length-1].zeit.getTime();
+  const vs=R.map(p=>p.v), lo=Math.min(...vs), hi=Math.max(...vs);
+  const spanne=Math.max(0.04, hi-lo), mitte=(hi+lo)/2;
+  const yLo=mitte-spanne*0.75, yHi=mitte+spanne*0.75;
+  const x=t=>P0+((t-t0)/Math.max(1,t1-t0))*(P1-P0);
+  const y=v=>achse-((v-yLo)/(yHi-yLo))*(achse-oben);
+  let g='';
+  [0.25,0.5,0.75].forEach(f=>{
+    const v=yLo+(yHi-yLo)*f;
+    g+=`<line x1="${P0}" y1="${y(v)}" x2="${P1}" y2="${y(v)}" stroke="var(--linie)" stroke-dasharray="1 5"/>`;
+    g+=`<text x="${P0-6}" y="${y(v)+4}" text-anchor="end" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${(v-PNP).toFixed(2).replace(".",",")}</text>`;
+  });
+  let pfad='';
+  R.forEach((p,i)=>{ pfad+=(i?"L":"M")+x(p.zeit.getTime())+","+y(p.v)+" "; });
+  g+=`<path d="${pfad} L ${x(t1)},${achse} L ${x(t0)},${achse} Z" fill="var(--wasser)" opacity=".12"/>`;
+  g+=`<path d="${pfad}" fill="none" stroke="var(--wasser)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  g+=`<circle cx="${x(t1)}" cy="${y(R[R.length-1].v)}" r="4.5" fill="var(--wasser)"/>`;
+  const tage=(t1-t0)/(24*3600*1000);
+  for(let i=0;i<=4;i++){
+    const t=t0+(t1-t0)*i/4;
+    g+=`<text x="${x(t)}" y="${achse+18}" text-anchor="middle" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${new Date(t).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</text>`;
+  }
+  g+=`<text x="${L}" y="16" font-size="11.5" fill="var(--wasser)" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.2" font-weight="600">VERLAUF ${Math.round(tage)} TAGE · M ÜBER PEGELNULL</text>`;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.style.height=H+"px"; svg.innerHTML=g;
+}
+
+function wasserJahreZeichnen(){
+  const svg=$("#wasserjahre"), txt=$("#wasserjahretext");
+  const quelle = WASSER.jahre && WASSER.jahre.length ? WASSER.jahre : null;
+  if(!quelle){
+    svg.setAttribute("hidden","");
+    txt.innerHTML=`<b>Jahresvergleich nicht verfügbar.</b> Der automatische Export-Abruf ist gerade fehlgeschlagen,
+      und es liegt auch keine eigene Verlaufsdatei bereit.
+      Einmalig holen: beim <a href="https://wasser.bgld.gv.at/hydrographie/die-seen/mittler-wasserstand-neusiedler-see" target="_blank" rel="noopener">Wasserportal</a>
+      unter „Export“ Intervall <b>1 Tag</b> wählen, Jahre von ${new Date().getFullYear()-2} bis ${new Date().getFullYear()} exportieren,
+      die Datei als <b>${cfg.whist||"wasserstand-historie.csv"}</b> neben die index.html ins Repo legen.
+      Erwartet wird je Zeile ein Datum und ein Wert, etwa <code>01.05.2025;114,85</code>.
+      ${WASSER.histFehler?`<br><span style="color:var(--nebel-2);font-size:12.5px">${WASSER.histFehler}</span>`:""}
+      ${WASSER.probe?`<div class="probe">${escHtml(WASSER.probe.text.slice(0,400))}</div>
+        <p class="hint" style="margin-top:6px">Das kam über <b>${WASSER.probe.via}</b> zurück, wurde aber nicht als Datei mit Tageswerten erkannt.</p>`:""}`;
+    return;
+  }
+  // Tagesmittel je Jahr, Index = Tag im Jahr
+  const jetztJahr=new Date().getFullYear();
+  const jahre=[jetztJahr, jetztJahr-1, jetztJahr-2];
+  const farben=["var(--wasser)","var(--gruen)","var(--nebel-2)"];
+  const serien=jahre.map(J=>{
+    const tage=new Map();
+    quelle.forEach(p=>{
+      if(p.zeit.getFullYear()!==J) return;
+      const d=Math.floor((p.zeit-new Date(J,0,0))/(24*3600*1000));
+      if(!tage.has(d)) tage.set(d,[]);
+      tage.get(d).push(p.v);
+    });
+    const punkte=[...tage.entries()].map(([d,vs])=>({d, v:vs.reduce((a,b)=>a+b,0)/vs.length}))
+      .sort((a,b)=>a.d-b.d);
+    return {jahr:J, punkte};
+  }).filter(s=>s.punkte.length>2);
+  if(!serien.length){ svg.setAttribute("hidden",""); txt.textContent="Verlaufsdatei enthält keine passenden Jahre."; return; }
+  svg.removeAttribute("hidden");
+
+  const W=Math.max(320,Math.round(svg.clientWidth||760)), H=250, L=8, Rr=8, gasse=52;
+  const P0=L+gasse, P1=W-Rr, oben=44, achse=H-34;
+  const alle=serien.flatMap(s=>s.punkte.map(p=>p.v));
+  const lo=Math.min(...alle), hi=Math.max(...alle), pad=(hi-lo)*0.12||0.05;
+  const x=d=>P0+((d-1)/365)*(P1-P0);
+  const y=v=>achse-((v-(lo-pad))/((hi+pad)-(lo-pad)))*(achse-oben);
+  let g='';
+  [0,0.5,1].forEach(f=>{
+    const v=(lo-pad)+((hi+pad)-(lo-pad))*f;
+    g+=`<line x1="${P0}" y1="${y(v)}" x2="${P1}" y2="${y(v)}" stroke="var(--linie)" stroke-dasharray="1 5"/>`;
+    g+=`<text x="${P0-6}" y="${y(v)+4}" text-anchor="end" font-size="11.5" fill="var(--nebel-2)" font-family="IBM Plex Mono,monospace">${(v-PNP).toFixed(2).replace(".",",")}</text>`;
+  });
+  ["J","F","M","A","M","J","J","A","S","O","N","D"].forEach((mn,i)=>{
+    const d=Math.round(i*30.4)+1;
+    g+=`<text x="${x(d)}" y="${achse+18}" text-anchor="middle" font-size="11" fill="var(--nebel-2)" font-family="IBM Plex Sans Condensed,sans-serif">${mn}</text>`;
+  });
+  serien.forEach((s,i)=>{
+    let pfad='';
+    s.punkte.forEach((p,k)=>{ pfad+=(k?"L":"M")+x(p.d)+","+y(p.v)+" "; });
+    g+=`<path d="${pfad}" fill="none" stroke="${farben[i]}" stroke-width="${i===0?2.8:1.9}" stroke-linejoin="round" opacity="${i===0?1:.8}"/>`;
+    g+=`<text x="${L+i*78}" y="18" font-size="12" fill="${farben[i]}" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.2" font-weight="600">— ${s.jahr}</text>`;
+  });
+  const heute=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/(24*3600*1000));
+  g+=`<line x1="${x(heute)}" y1="${oben-8}" x2="${x(heute)}" y2="${achse}" stroke="var(--segel)" stroke-dasharray="2 4" opacity=".45"/>`;
+  g+=`<text x="${L}" y="36" font-size="11" fill="var(--nebel)" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1">TAGESMITTEL, M ÜBER PEGELNULL</text>`;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.style.height=H+"px"; svg.innerHTML=g;
+
+  // Vergleich zum gleichen Kalendertag der Vorjahre
+  const heuteWert=WASSER.reihe.length?WASSER.reihe[WASSER.reihe.length-1].v:null;
+  const zeilen=serien.slice(1).map(s=>{
+    const nah=s.punkte.reduce((a,p)=>Math.abs(p.d-heute)<Math.abs(a.d-heute)?p:a);
+    if(Math.abs(nah.d-heute)>5 || heuteWert==null) return `${s.jahr}: kein Wert um diesen Tag`;
+    const d=(heuteWert-nah.v)*100;
+    return `Gegenüber <b>${s.jahr}</b> um diese Zeit: <b style="color:${d>0?"var(--gruen)":"var(--schilf)"}">${d>0?"+":""}${de(d)} cm</b>`;
+  });
+  txt.innerHTML = zeilen.join("<br>") +
+    `<br><span style="color:var(--nebel-2);font-size:12.5px">Senkrechte Linie markiert den heutigen Kalendertag. Werte sind Tagesmittel, `+
+    (WASSER.jahreQuelle==="automatisch" ? "automatisch über den Export der Livegrafik geladen." : "aus deiner eigenen Verlaufsdatei.")+`</span>`;
 }
 
 function fuss(){
@@ -1467,15 +2177,31 @@ $("#reload").onclick=laden;
 $("#einst").querySelectorAll("input").forEach(i=>{
   i.addEventListener("change",()=>{
     const k=i.id.slice(2);
-    cfg[k] = k==="name" ? i.value : parseFloat(i.value);
-    if(k!=="name"&&isNaN(cfg[k])) cfg[k]=STD[k];
+    cfg[k] = (k==="name"||k==="prox"||k==="wurl"||k==="whist"||k==="wtoken") ? i.value : parseFloat(i.value);
+    if(k!=="name"&&k!=="prox"&&isNaN(cfg[k])) cfg[k]=STD[k];
     hashSchreiben(); formFuellen();
-    if(k==="lat"||k==="lon"){ karteNeuZentrieren(); laden(); } else if(daten) zeichnen();
+    if(k==="lat"||k==="lon"){ MESSSTATION=null; MESS.geo.reihe=[]; MESS.kite.reihe=[]; karteNeuZentrieren(); laden(); }
+    else if(k==="prox"){ MESS.kite.reihe=[]; messwerteLaden(); }
+    else if(k==="wurl"||k==="whist"||k==="wtoken"){ wasserLaden(); }
+    else if(daten) zeichnen();
   });
 });
+$("#i-korrektur").addEventListener("change",e=>{
+  korrekturAktiv=e.target.checked;
+  if(daten) zeichnen();
+});
+
 let rsz;
-addEventListener("resize",()=>{ clearTimeout(rsz); rsz=setTimeout(()=>{ if(daten) band(); if(karte) karte.invalidateSize(); },180); });
-addEventListener("orientationchange",()=>setTimeout(()=>{ if(daten) band(); if(karte) karte.invalidateSize(); },350));
+addEventListener("resize",()=>{ clearTimeout(rsz); rsz=setTimeout(()=>{
+  if(daten) band(); if(karte) karte.invalidateSize();
+  if(MESS.geo.reihe.length||MESS.kite.reihe.length){ messTrendZeichnen(); abweichungZeichnen(); }
+  if(WASSER.reihe.length) wasserZeichnen();
+},180); });
+addEventListener("orientationchange",()=>setTimeout(()=>{
+  if(daten) band(); if(karte) karte.invalidateSize();
+  if(MESS.geo.reihe.length||MESS.kite.reihe.length){ messTrendZeichnen(); abweichungZeichnen(); }
+  if(WASSER.reihe.length) wasserZeichnen();
+},350));
 setInterval(()=>{ if(!document.hidden) laden(); }, 10*60*1000);
 document.addEventListener("visibilitychange",()=>{
   if(!document.hidden && daten) laden();
