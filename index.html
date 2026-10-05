@@ -2018,7 +2018,7 @@ async function wasserLaden(){
 async function wasserJahreLaden(){
   WASSER.histFehler=null; WASSER.jahre=null;
   const jetztJahr=new Date().getFullYear();
-  const jahre=[jetztJahr, jetztJahr-1, jetztJahr-2];
+  const jahre=Array.from({length:5},(_,i)=>jetztJahr-i);
 
   if(cfg.wtoken){
     const teile=await Promise.allSettled(jahre.map(async J=>{
@@ -2133,7 +2133,7 @@ function wasserJahreZeichnen(){
     txt.innerHTML=`<b>Jahresvergleich nicht verfügbar.</b> Der automatische Export-Abruf ist gerade fehlgeschlagen,
       und es liegt auch keine eigene Verlaufsdatei bereit.
       Einmalig holen: beim <a href="https://wasser.bgld.gv.at/hydrographie/die-seen/mittler-wasserstand-neusiedler-see" target="_blank" rel="noopener">Wasserportal</a>
-      unter „Export“ Intervall <b>1 Tag</b> wählen, Jahre von ${new Date().getFullYear()-2} bis ${new Date().getFullYear()} exportieren,
+      unter „Export“ Intervall <b>1 Tag</b> wählen, Jahre von ${new Date().getFullYear()-4} bis ${new Date().getFullYear()} exportieren,
       die Datei als <b>${cfg.whist||"wasserstand-historie.csv"}</b> neben die index.html ins Repo legen.
       Erwartet wird je Zeile ein Datum und ein Wert, etwa <code>01.05.2025;114,85</code>.
       ${WASSER.histFehler?`<br><span style="color:var(--nebel-2);font-size:12.5px">${WASSER.histFehler}</span>`:""}
@@ -2143,8 +2143,8 @@ function wasserJahreZeichnen(){
   }
   // Tagesmittel je Jahr, Index = Tag im Jahr
   const jetztJahr=new Date().getFullYear();
-  const jahre=[jetztJahr, jetztJahr-1, jetztJahr-2];
-  const farben=["var(--wasser)","var(--gruen)","var(--nebel-2)"];
+  const jahre=Array.from({length:5},(_,i)=>jetztJahr-i);
+  const farben=["var(--wasser)","var(--gruen)","var(--schilf)","var(--sturm)","var(--nebel-2)"];
   const serien=jahre.map(J=>{
     const tage=new Map();
     quelle.forEach(p=>{
@@ -2180,7 +2180,7 @@ function wasserJahreZeichnen(){
     let pfad='';
     s.punkte.forEach((p,k)=>{ pfad+=(k?"L":"M")+x(p.d)+","+y(p.v)+" "; });
     g+=`<path d="${pfad}" fill="none" stroke="${farben[i]}" stroke-width="${i===0?2.8:1.9}" stroke-linejoin="round" opacity="${i===0?1:.8}"/>`;
-    g+=`<text x="${L+i*78}" y="18" font-size="12" fill="${farben[i]}" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.2" font-weight="600">— ${s.jahr}</text>`;
+    g+=`<text x="${L+i*64}" y="18" font-size="12" fill="${farben[i]}" font-family="IBM Plex Sans Condensed,sans-serif" letter-spacing="1.2" font-weight="600">— ${s.jahr}</text>`;
   });
   const heute=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/(24*3600*1000));
   g+=`<line x1="${x(heute)}" y1="${oben-8}" x2="${x(heute)}" y2="${achse}" stroke="var(--segel)" stroke-dasharray="2 4" opacity=".45"/>`;
